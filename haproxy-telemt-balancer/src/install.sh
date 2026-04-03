@@ -76,11 +76,15 @@ ensure_docker() {
   if docker_daemon_ok; then
     return 0
   fi
-  if command -v docker >/dev/null 2>&1 && command -v systemctl >/dev/null 2>&1; then
-    systemctl start docker 2>/dev/null || true
-    if wait_for_docker_daemon; then
-      return 0
+  if command -v docker >/dev/null 2>&1; then
+    if command -v systemctl >/dev/null 2>&1; then
+      systemctl start docker 2>/dev/null || true
+      if wait_for_docker_daemon; then
+        return 0
+      fi
     fi
+    ui_err "Docker is installed but the daemon is not reachable (docker info failed). Start Docker and run this script again."
+    exit 1
   fi
   install_docker
   if ! docker_daemon_ok; then
