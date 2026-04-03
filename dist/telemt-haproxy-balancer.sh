@@ -92,6 +92,20 @@ ui_log_block_end() {
   printf '%s\n' "${UI_RESET}"
 }
 
+# --- telemt_privilege.sh (from common) ---
+
+telemt_require_root() {
+  if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+    return 0
+  fi
+  if declare -F ui_err >/dev/null 2>&1; then
+    ui_err "Run as root (e.g. sudo bash this script). Docker install and HAProxy need elevated privileges."
+  else
+    printf '%s\n' "Run as root (e.g. sudo bash this script). Docker install and HAProxy need elevated privileges." >&2
+  fi
+  exit 1
+}
+
 # --- haproxy.cfg.tpl (embedded) ---
 telemt_embedded_haproxy_cfg_tpl() {
 cat <<'__TELEMT_HAPROXY_TPL__'
@@ -364,7 +378,7 @@ ask_hosts() {
     ui_err "At least one upstream host is required."
     exit 1
   fi
-  ui_warn "If HAProxy uses send-proxy-v2 toward telemt, you may need proxy_protocol = true in the telemt configuration."
+  ui_warn "You may need proxy_protocol = true in the telemt configuration."
 }
 
 validate_env() {
@@ -448,6 +462,7 @@ deploy() {
     --name "${CONTAINER_NAME}" \
     --restart unless-stopped \
     --network host \
+    --user 0:0 \
     -v "${OUTPUT_CFG}:/usr/local/etc/haproxy/haproxy.cfg:ro" \
     --log-driver json-file \
     --log-opt max-size=10m \
@@ -457,6 +472,7 @@ deploy() {
 }
 
 telemt_install_main() {
+  telemt_require_root
   ui_section "telemt-haproxy-balancer — install / update"
 
   if ! declare -F telemt_embedded_haproxy_cfg_tpl >/dev/null 2>&1; then
@@ -465,6 +481,9 @@ telemt_install_main() {
       exit 1
     fi
   fi
+
+  ui_section "Docker"
+  ensure_docker
 
   ui_section "Configuration"
   load_existing_env
@@ -484,9 +503,6 @@ telemt_install_main() {
   generate_backend_servers "${TELEMT_UPSTREAM_HOSTS}" "${TELEMT_UPSTREAM_PORT}"
   render_haproxy_cfg
   save_env
-
-  ui_section "Docker"
-  ensure_docker
 
   ui_section "Validate configuration"
   validate_haproxy_cfg
@@ -530,11 +546,6 @@ RUN_DIR="${PWD}"
 CONTAINER_NAME="telemt-haproxy-balancer"
 ENV_FILE="${RUN_DIR}/telemt-haproxy-balancer.env"
 CFG_FILE="${RUN_DIR}/haproxy.cfg"
-
-if ! command -v docker >/dev/null 2>&1; then
-  ui_err "Not found: docker"
-  exit 1
-fi
 
 show_help() {
   ui_section "utils — help"
@@ -580,6 +591,10 @@ cmd_remove() {
 
 telemt_utils_main() {
   local action="${1:-}"
+  if ! command -v docker >/dev/null 2>&1; then
+    ui_err "Not found: docker"
+    exit 1
+  fi
   case "${action}" in
     logs)
       cmd_logs
@@ -613,6 +628,8 @@ if [[ -z "${BASH_VERSION:-}" ]]; then
   ui_err "Run this script with bash: bash start.sh"
   exit 1
 fi
+
+telemt_require_root
 
 run_install() {
   if [[ -n "${TELEMT_BALANCER_MONOLITH:-}" ]]; then

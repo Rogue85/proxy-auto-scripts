@@ -16,11 +16,6 @@ CONTAINER_NAME="telemt-haproxy-balancer"
 ENV_FILE="${RUN_DIR}/telemt-haproxy-balancer.env"
 CFG_FILE="${RUN_DIR}/haproxy.cfg"
 
-if ! command -v docker >/dev/null 2>&1; then
-  ui_err "Not found: docker"
-  exit 1
-fi
-
 show_help() {
   ui_section "utils — help"
   ui_info "Usage: bash utils.sh <command>"
@@ -65,6 +60,10 @@ cmd_remove() {
 
 telemt_utils_main() {
   local action="${1:-}"
+  if ! command -v docker >/dev/null 2>&1; then
+    ui_err "Not found: docker"
+    exit 1
+  fi
   case "${action}" in
     logs)
       cmd_logs

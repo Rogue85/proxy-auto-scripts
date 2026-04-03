@@ -325,6 +325,7 @@ deploy() {
     --name "${CONTAINER_NAME}" \
     --restart unless-stopped \
     --network host \
+    --user 0:0 \
     -v "${OUTPUT_CFG}:/usr/local/etc/haproxy/haproxy.cfg:ro" \
     --log-driver json-file \
     --log-opt max-size=10m \
@@ -334,6 +335,7 @@ deploy() {
 }
 
 telemt_install_main() {
+  telemt_require_root
   ui_section "telemt-haproxy-balancer — install / update"
 
   if ! declare -F telemt_embedded_haproxy_cfg_tpl >/dev/null 2>&1; then
@@ -342,6 +344,9 @@ telemt_install_main() {
       exit 1
     fi
   fi
+
+  ui_section "Docker"
+  ensure_docker
 
   ui_section "Configuration"
   load_existing_env
@@ -361,9 +366,6 @@ telemt_install_main() {
   generate_backend_servers "${TELEMT_UPSTREAM_HOSTS}" "${TELEMT_UPSTREAM_PORT}"
   render_haproxy_cfg
   save_env
-
-  ui_section "Docker"
-  ensure_docker
 
   ui_section "Validate configuration"
   validate_haproxy_cfg

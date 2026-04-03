@@ -7,11 +7,16 @@ SRC_DIR="${PKG_DIR}/src"
 DIST_DIR="${REPO_ROOT}/dist"
 OUT="${DIST_DIR}/telemt-haproxy-balancer.sh"
 COMMON_UI="${REPO_ROOT}/common/lib_ui.sh"
+COMMON_PRIV="${REPO_ROOT}/common/telemt_privilege.sh"
 
 mkdir -p "${DIST_DIR}"
 
 if [[ ! -f "${COMMON_UI}" ]]; then
   echo "Missing ${COMMON_UI}" >&2
+  exit 1
+fi
+if [[ ! -f "${COMMON_PRIV}" ]]; then
+  echo "Missing ${COMMON_PRIV}" >&2
   exit 1
 fi
 if [[ ! -f "${PKG_DIR}/haproxy.cfg.tpl" ]]; then
@@ -29,6 +34,8 @@ done
   printf '%s\n' '#!/usr/bin/env bash' 'set -euo pipefail' 'export TELEMT_BALANCER_MONOLITH=1' ''
   printf '%s\n' '# --- lib_ui.sh (from common) ---'
   tail -n +2 "${COMMON_UI}"
+  printf '\n%s\n' '# --- telemt_privilege.sh (from common) ---'
+  tail -n +2 "${COMMON_PRIV}"
   printf '\n%s\n' '# --- haproxy.cfg.tpl (embedded) ---'
   printf '%s\n' 'telemt_embedded_haproxy_cfg_tpl() {'
   printf '%s\n' "cat <<'__TELEMT_HAPROXY_TPL__'"

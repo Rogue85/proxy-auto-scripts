@@ -12,6 +12,8 @@ if [[ -z "${BASH_VERSION:-}" ]]; then
   exit 1
 fi
 
+telemt_require_root
+
 run_install() {
   if [[ -n "${TELEMT_BALANCER_MONOLITH:-}" ]]; then
     telemt_install_main
