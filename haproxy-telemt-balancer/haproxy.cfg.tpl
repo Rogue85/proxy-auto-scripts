@@ -20,5 +20,7 @@ frontend tcp_in
 
 backend telemt_nodes
     balance roundrobin
+    stick-table type ip size 200k expire 30m
+    stick on src
     default-server inter 5s rise 2 fall 3${SEND_PROXY_V2_SUFFIX}
 ${TELEMT_BACKEND_SERVERS}
