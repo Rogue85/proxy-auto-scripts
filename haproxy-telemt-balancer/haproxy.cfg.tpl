@@ -1,6 +1,6 @@
 global
     log stdout format raw local0
-    maxconn 10000
+    maxconn 20000
 
 defaults
     log global
@@ -15,7 +15,7 @@ defaults
 
 frontend tcp_in
     bind *:${LISTEN_PORT}
-    maxconn 8000
+    maxconn 15000
     default_backend telemt_nodes
 
 backend telemt_nodes
