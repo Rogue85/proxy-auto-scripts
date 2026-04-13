@@ -127,7 +127,7 @@ defaults
     timeout check 5s
 
 frontend tcp_in
-    bind *:${LISTEN_PORT} reuseport
+    bind *:${LISTEN_PORT}
     maxconn 80000
     default_backend telemt_nodes
 
