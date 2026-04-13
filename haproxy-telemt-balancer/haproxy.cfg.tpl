@@ -1,6 +1,8 @@
 global
     log stdout format raw local0
-    maxconn 20000
+    maxconn 100000
+    nbthread 2
+    tune.maxaccept 1000
 
 defaults
     log global
@@ -9,13 +11,13 @@ defaults
     option clitcpka
     option srvtcpka
     timeout connect 5s
-    timeout client 2h
-    timeout server 2h
+    timeout client 30m
+    timeout server 30m
     timeout check 5s
 
 frontend tcp_in
-    bind *:${LISTEN_PORT}
-    maxconn 15000
+    bind *:${LISTEN_PORT} reuseport
+    maxconn 80000
     default_backend telemt_nodes
 
 backend telemt_nodes
