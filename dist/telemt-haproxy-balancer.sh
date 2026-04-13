@@ -469,6 +469,7 @@ deploy() {
     --restart unless-stopped \
     --network host \
     --user 0:0 \
+    --ulimit nofile=200000:200000 \
     -v "${OUTPUT_CFG}:/usr/local/etc/haproxy/haproxy.cfg:ro" \
     --log-driver json-file \
     --log-opt max-size=10m \
